@@ -28,6 +28,9 @@ class Grid extends React.Component {
         let dx, dy;
         const size = this.size;
         const newSnake = this.state.snake;
+        const headCoordinates = positionToCoordinates(newSnake[newSnake.length - 1], size);
+        let newCoordinates;
+        let newHeadPosition;
 
         switch (this.state.direction) {
             case 'up':
@@ -51,12 +54,13 @@ class Grid extends React.Component {
                 break;
         }
 
-        this.setState({
-            snake: newSnake.map((position) => {
-                const [y, x] = positionToCoordinates(position, size);
+        newCoordinates = [(headCoordinates[0] + dy) % size, (headCoordinates[1] + dx) % size];
+        newHeadPosition = coordinatesToPosition(newCoordinates, size);
+        newSnake.push(newHeadPosition);
+        newSnake.shift();
 
-                return coordinatesToPosition([(y + dy) % size, (x + dx) % size], size);
-            }),
+        this.setState({
+            snake: newSnake,
         });
     }
 
