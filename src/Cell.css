@@ -1,0 +1,12 @@
+.cell {
+    /*
+    width: 10%;
+    height: 100%;
+    */
+    width: 75px;
+    height: 75px;
+}
+
+.cell:not(:last-child) {
+    border-right: 1px solid #000000;
+}
