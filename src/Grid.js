@@ -1,7 +1,17 @@
 import React from 'react';
 import Row from './Row';
+import _ from 'lodash';
 import {getRange, getRandomInt, keyToDirection} from './lib';
 import './Grid.css';
+
+const INITIAL_STATE = {
+    status: '',
+    snake: getRange(3),
+    food: [],
+    speed: 300,
+    direction: 'Right',
+    last: '',
+};
 
 class Grid extends React.Component {
     constructor(props) {
@@ -21,13 +31,7 @@ class Grid extends React.Component {
             'Down': 'Up',
             'Left': 'Right',
         }
-        this.state = {
-            status: '',
-            snake: getRange(3),
-            food: [],
-            speed: 400,
-            direction: 'Right',
-        };
+        this.state = _.cloneDeep(INITIAL_STATE);
     }
 
     componentDidMount() {
@@ -55,13 +59,7 @@ class Grid extends React.Component {
     }
 
     restartGame() {
-        this.setState({
-            status: '',
-            snake: getRange(3),
-            food: [],
-            speed: 400,
-            direction: 'Right',
-        });
+        this.setState(_.cloneDeep(INITIAL_STATE));
         this.addFood();
         this.restartTimer();
     }
@@ -105,6 +103,7 @@ class Grid extends React.Component {
 
         this.setState({
             snake: newSnake,
+            last: this.state.direction,
         });
     }
 
@@ -118,13 +117,17 @@ class Grid extends React.Component {
         return this.state.food.includes(this.coordinatesToPosition(head));
     }
 
-    eatFood(head) {
+    eatFood(food) {
 
         // Get food
         const newFood = this.state.food;
 
         // Eat something
-        newFood.splice(newFood.indexOf(head), 1);
+        newFood.splice(newFood.indexOf(food), 1);
+
+        this.setState({
+            food: newFood,
+        })
     }
 
     addFood() {
@@ -174,10 +177,10 @@ class Grid extends React.Component {
 
         // No arrow key pressed
         // Same direction
-        // Opposite direction
+        // Opposite direction to last move
         if (!direction ||
-            direction === this.state.direction ||
-            direction === this.opposites[this.state.direction]) {
+            (direction === this.state.direction) ||
+            (this.state.last && direction === this.opposites[this.state.last])) {
             return;
         }
 
