@@ -8,56 +8,45 @@ class Grid extends React.Component {
         super(props);
         this.size = 25;
         this.range = range(this.size);
+        this.directions = {
+            'ArrowUp': [0, -1],
+            'ArrowRight': [1, 0],
+            'ArrowDown': [0, 1],
+            'ArrowLeft': [-1, 0],
+        };
         this.state = {
             snake: [0, 1, 2],
-            direction: 'right',
+            direction: 'ArrowRight',
         };
     }
 
     componentDidMount() {
-        document.addEventListener("keydown", this.handleKeyDown, false);
+        document.addEventListener('keydown', this.handleKeyDown, false);
         this.timerID = setInterval(() => this.moveSnake(), 250);
     }
 
     componentWillUnmount() {
-        document.removeEventListener("keydown", this.handleKeyDown, false);
+        document.removeEventListener('keydown', this.handleKeyDown, false);
         clearInterval(this.timerID);
     }
 
     moveSnake() {
-        let dx, dy;
+        const [dx, dy] = this.directions[this.state.direction];
         const size = this.size;
         const newSnake = this.state.snake;
         const headCoordinates = positionToCoordinates(newSnake[newSnake.length - 1], size);
-        let newCoordinates;
-        let newHeadPosition;
+        let newHeadCoordinates;
 
-        switch (this.state.direction) {
-            case 'up':
-                dx = 0;
-                dy = -1;
-                break;
+        // Determine new snake head coordinates
+        newHeadCoordinates = [
+            (headCoordinates[0] + size + dy) % size,
+            (headCoordinates[1] + size + dx) % size
+        ];
 
-            case 'right':
-                dx = 1;
-                dy = 0;
-                break;
-
-            case 'down':
-                dx = 0;
-                dy = 1;
-                break;
-
-            case 'left':
-                dx = -1;
-                dy = 0;
-                break;
-        }
-
-        newCoordinates = [(headCoordinates[0] + dy) % size, (headCoordinates[1] + dx) % size];
-        newHeadPosition = coordinatesToPosition(newCoordinates, size);
-        newSnake.push(newHeadPosition);
-        newSnake.shift();
+        // Rewrite snake position
+        newSnake[0] = newSnake[1];
+        newSnake[1] = newSnake[2];
+        newSnake[2] = coordinatesToPosition(newHeadCoordinates, size);
 
         this.setState({
             snake: newSnake,
@@ -65,29 +54,15 @@ class Grid extends React.Component {
     }
 
     handleKeyDown = (e) => {
-        let direction;
 
-        switch(e.code) {
-            case 'ArrowUp':
-                direction = 'up';
-                break;
-
-            case 'ArrowRight':
-                direction = 'right';
-                break;
-
-            case 'ArrowDown':
-                direction = 'down';
-                break;
-
-            case 'ArrowLeft':
-                direction = 'left';
-                break;
+        // No arrow key pressed
+        if (!(e.code in this.directions)) {
+            return;
         }
 
         this.setState({
-            direction: direction,
-        })
+            direction: e.code,
+        });
     }
 
     handleCellState = (position) => {
@@ -96,7 +71,7 @@ class Grid extends React.Component {
 
     render() {
         return (
-            <div className="grid">
+            <div className='grid'>
                 {this.range.map((value, index) => (
                     <Row key={index} index={index} size={this.size} handleCellState={this.handleCellState} />
                 ))}
