@@ -12,5 +12,9 @@
 }
 
 .cell.snake {
+    background: #000000;
+}
+
+.cell.food {
     background: #dd0000;
 }

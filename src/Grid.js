@@ -1,13 +1,13 @@
 import React from 'react';
 import Row from './Row';
-import {range, positionToCoordinates, coordinatesToPosition, keyToDirection} from './lib';
+import {range, keyToDirection} from './lib';
 import './Grid.css';
 
 class Grid extends React.Component {
     constructor(props) {
         super(props);
         this.size = 25;
-        this.speed = 100;
+        this.center = Math.ceil(this.size / 2) - 1;
         this.range = range(this.size);
         this.directions = {
             'Up': [0, -1],
@@ -22,14 +22,16 @@ class Grid extends React.Component {
             'Left': 'Right',
         }
         this.state = {
-            snake: [0, 1, 2],
+            snake: range(3),
+            food: [this.coordinatesToPosition([this.center, this.center])],
+            speed: 100,
             direction: 'Right',
         };
     }
 
     componentDidMount() {
         document.addEventListener("keydown", this.handleKeyDown, false);
-        this.timerID = setInterval(() => this.moveSnake(), this.speed);
+        this.timerID = setInterval(() => this.moveSnake(), this.state.speed);
     }
 
     componentWillUnmount() {
@@ -41,7 +43,7 @@ class Grid extends React.Component {
         const [dx, dy] = this.directions[this.state.direction];
         const size = this.size;
         const newSnake = this.state.snake;
-        const headCoordinates = positionToCoordinates(newSnake[newSnake.length - 1], size);
+        const headCoordinates = this.positionToCoordinates(newSnake[newSnake.length - 1], size);
         let newHeadCoordinates;
 
         // Determine new snake head coordinates
@@ -51,9 +53,8 @@ class Grid extends React.Component {
         ];
 
         // Rewrite snake position
-        newSnake[0] = newSnake[1];
-        newSnake[1] = newSnake[2];
-        newSnake[2] = coordinatesToPosition(newHeadCoordinates, size);
+        newSnake.shift();
+        newSnake.push(this.coordinatesToPosition(newHeadCoordinates, size));
 
         this.setState({
             snake: newSnake,
@@ -65,8 +66,12 @@ class Grid extends React.Component {
         // Get direction
         const direction = keyToDirection(e.code);
 
-        // No arrow key pressed or same direction
-        if (!direction || direction === this.state.direction || direction === this.opposites[this.state.direction]) {
+        // No arrow key pressed
+        // Same direction
+        // Opposite direction
+        if (!direction ||
+            direction === this.state.direction ||
+            direction === this.opposites[this.state.direction]) {
             return;
         }
 
@@ -75,8 +80,31 @@ class Grid extends React.Component {
         });
     }
 
-    handleCellState = (position) => {
-        return this.state.snake.includes(position) ? 'snake' : '';
+    handleCellState = (coordinates) => {
+
+        // Get position
+        const position = this.coordinatesToPosition(coordinates);
+
+        // Snake
+        if (this.state.snake.includes(position)) {
+            return 'snake';
+        }
+
+        // Food
+        if (this.state.food.includes(position)) {
+            return 'food';
+        }
+
+        // Empty
+        return '';
+    }
+
+    positionToCoordinates(position) {
+        return [Math.floor(position / this.size), position % this.size];
+    }
+
+    coordinatesToPosition(coordinates) {
+        return this.size * coordinates[0] + coordinates[1];
     }
 
     render() {
