@@ -9,3 +9,22 @@ export const positionToCoordinates = (position, size) => {
 export const coordinatesToPosition = (coordinates, size) => {
     return size * coordinates[0] + coordinates[1];
 }
+
+export const keyToDirection = (key) => {
+    switch (key) {
+        case 'ArrowUp':
+            return 'Up';
+
+        case 'ArrowRight':
+            return 'Right';
+
+        case 'ArrowDown':
+            return 'Down';
+
+        case 'ArrowLeft':
+            return 'Left';
+
+        default:
+            return null;
+    }
+}

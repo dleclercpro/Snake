@@ -1,32 +1,39 @@
 import React from 'react';
 import Row from './Row';
-import {range, positionToCoordinates, coordinatesToPosition} from './lib';
+import {range, positionToCoordinates, coordinatesToPosition, keyToDirection} from './lib';
 import './Grid.css';
 
 class Grid extends React.Component {
     constructor(props) {
         super(props);
         this.size = 25;
+        this.speed = 100;
         this.range = range(this.size);
         this.directions = {
-            'ArrowUp': [0, -1],
-            'ArrowRight': [1, 0],
-            'ArrowDown': [0, 1],
-            'ArrowLeft': [-1, 0],
+            'Up': [0, -1],
+            'Right': [1, 0],
+            'Down': [0, 1],
+            'Left': [-1, 0],
         };
+        this.opposites = {
+            'Up': 'Down',
+            'Right': 'Left',
+            'Down': 'Up',
+            'Left': 'Right',
+        }
         this.state = {
             snake: [0, 1, 2],
-            direction: 'ArrowRight',
+            direction: 'Right',
         };
     }
 
     componentDidMount() {
-        document.addEventListener('keydown', this.handleKeyDown, false);
-        this.timerID = setInterval(() => this.moveSnake(), 250);
+        document.addEventListener("keydown", this.handleKeyDown, false);
+        this.timerID = setInterval(() => this.moveSnake(), this.speed);
     }
 
     componentWillUnmount() {
-        document.removeEventListener('keydown', this.handleKeyDown, false);
+        document.removeEventListener("keydown", this.handleKeyDown, false);
         clearInterval(this.timerID);
     }
 
@@ -55,13 +62,16 @@ class Grid extends React.Component {
 
     handleKeyDown = (e) => {
 
-        // No arrow key pressed
-        if (!(e.code in this.directions)) {
+        // Get direction
+        const direction = keyToDirection(e.code);
+
+        // No arrow key pressed or same direction
+        if (!direction || direction === this.state.direction || direction === this.opposites[this.state.direction]) {
             return;
         }
 
         this.setState({
-            direction: e.code,
+            direction: direction,
         });
     }
 
