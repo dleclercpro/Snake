@@ -4,4 +4,9 @@
     height: 90%;
     */
     border: 1px solid #dddddd;
+    transition: opacity ease-in-out 500ms;
+}
+
+.grid.lost {
+    opacity: 0.25;
 }
