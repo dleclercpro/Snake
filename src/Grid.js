@@ -36,13 +36,12 @@ class Grid extends React.Component {
 
     componentDidMount() {
         document.addEventListener('keydown', this.handleKeyDown, false);
-        this.startTimer();
-        this.addFood();
+        this.startGame();
     }
 
     componentWillUnmount() {
         document.removeEventListener('keydown', this.handleKeyDown, false);
-        this.stopTimer();
+        this.stopGame();
     }
 
     startTimer() {
@@ -58,10 +57,22 @@ class Grid extends React.Component {
         this.startTimer();
     }
 
-    restartGame() {
-        this.setState(_.cloneDeep(INITIAL_STATE));
+    startGame() {
         this.addFood();
-        this.restartTimer();
+        this.startTimer();
+    }
+
+    stopGame() {
+        this.stopTimer();
+        this.setState({
+            status: 'lost',
+        });
+    }
+
+    restartGame() {
+        this.stopGame();
+        this.setState(_.cloneDeep(INITIAL_STATE));
+        this.startGame();
     }
 
     moveSnake() {
@@ -75,10 +86,7 @@ class Grid extends React.Component {
 
         // Check if move is allowed
         if (!this.isMoveValid(newHead)) {
-            this.stopTimer();
-            this.setState({
-                status: 'lost',
-            });
+            this.stopGame();
             return;
         }
 
@@ -159,9 +167,11 @@ class Grid extends React.Component {
 
     updateSpeed(factor) {
         const newSpeed = Math.max(50, Math.floor(this.state.speed * factor));
+
         this.setState({
             speed: newSpeed,
         });
+
         this.restartTimer();
     }
 
