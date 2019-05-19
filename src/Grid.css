@@ -5,6 +5,7 @@
     */
     border: 1px solid #dddddd;
     transition: opacity ease-in-out 500ms;
+    margin-bottom: 30px;
 }
 
 .grid.lost {

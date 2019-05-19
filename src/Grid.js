@@ -16,7 +16,7 @@ const INITIAL_STATE = {
 class Grid extends React.Component {
     constructor(props) {
         super(props);
-        this.size = 25;
+        this.size = 40;
         this.center = Math.ceil(this.size / 2) - 1;
         this.range = getRange(this.size);
         this.directions = {
@@ -30,7 +30,7 @@ class Grid extends React.Component {
             'Right': 'Left',
             'Down': 'Up',
             'Left': 'Right',
-        }
+        };
         this.state = _.cloneDeep(INITIAL_STATE);
     }
 
