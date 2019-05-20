@@ -8,7 +8,7 @@ const INIT_STATE = {
     status: '',
     score: 3,
     snake: lib.getRange(3),
-    food: -1,
+    food: [],
     speed: 300,
     direction: 'Right',
     lastDirection: '',
@@ -19,6 +19,7 @@ class App extends React.Component {
         super(props);
         this.size = 40;
         this.nScores = 5;
+        this.minSpeed = 50;
         this.state = {
             ..._.cloneDeep(INIT_STATE),
             scores: [],
@@ -36,7 +37,7 @@ class App extends React.Component {
     }
 
     startTimer = () => {
-        this.timerID = setInterval(() => this.moveSnake(), this.state.speed);
+        this.timerID = setInterval(this.moveSnake, this.state.speed);
     }
 
     stopTimer = () => {
@@ -49,7 +50,6 @@ class App extends React.Component {
     }
 
     startGame = () => {
-        this.setState(_.cloneDeep(INIT_STATE));
         this.spawnFood();
         this.startTimer();
     }
@@ -62,10 +62,18 @@ class App extends React.Component {
         this.refs.scoreBoard.refs.newScoreInput.focus();
     }
 
+    restartGame = () => {
+        this.stopGame();
+        this.setState(_.cloneDeep(INIT_STATE), () => {
+            this.startGame();
+        });
+    }
+
     moveSnake = () => {
-        const newSnake = this.state.snake;
+
+        // Get useful info
         const [dx, dy] = Grid.directions[this.state.direction];
-        const head = lib.positionToCoordinates(newSnake[newSnake.length - 1], this.size);
+        const head = lib.positionToCoordinates(this.state.snake[this.state.snake.length - 1], this.size);
         const newHead = [head[0] + dy, head[1] + dx];
 
         // Check if move is allowed
@@ -78,33 +86,40 @@ class App extends React.Component {
             return;
         }
 
-        // Snake will eat food
-        if (this.willEatFood(newHead)) {
+        // Update snake
+        this.setState((state, props) => {
 
-            // Do it
-            this.eatFood();
+            // Get old snake
+            const newSnake = state.snake;
 
-            // Add new food to grid
-            this.spawnFood();
+            // Snake will eat food
+            if (this.willEatFood(newHead)) {
 
-            // Speed game up
-            this.updateSpeed(0.9);
-        }
+                // Do it
+                this.eatFood(newHead);
 
-        // Otherwise
-        else {
+                // Add new food to grid
+                this.spawnFood();
 
-            // Remove tail
-            newSnake.shift();
-        }
+                // Speed game up
+                this.updateSpeed();
+            }
 
-        // Move head
-        newSnake.push(lib.coordinatesToPosition(newHead, this.size));
+            // Otherwise
+            else {
 
-        // Update game state
-        this.setState({
-            snake: newSnake,
-            lastDirection: this.state.direction,
+                // Remove tail
+                newSnake.shift();
+            }
+
+            // Move head
+            newSnake.push(lib.coordinatesToPosition(newHead, this.size));
+
+            // Update snake
+            return {
+                snake: newSnake,
+                lastDirection: state.direction,
+            };
         });
     }
 
@@ -115,14 +130,24 @@ class App extends React.Component {
     }
 
     willEatFood = (head) => {
-        return this.state.food === lib.coordinatesToPosition(head, this.size);
+        return this.state.food.includes(lib.coordinatesToPosition(head, this.size));
     }
 
-    eatFood = () => {
+    eatFood = (food) => {
 
-        // Remove food
-        this.setState({
-            food: -1,
+        // Eat something
+        this.setState((state, props) => {
+
+            // Get old food array
+            const newFood = state.food;
+
+            // Remove eaten food
+            newFood.splice(newFood.indexOf(food), 1);
+
+            // Update food array
+            return {
+                food: newFood,
+            };
         });
 
         // Update score
@@ -135,14 +160,24 @@ class App extends React.Component {
         while (true) {
 
             // Generate new food
-            const newFood = lib.getRandomInt(Math.pow(this.size, 2));
+            const food = lib.getRandomInt(Math.pow(this.size, 2));
 
             // New food cannot be spawn where snake is
-            if (!this.state.snake.includes(newFood)) {
+            if (!this.state.snake.includes(food)) {
 
                 // Add food
-                this.setState({
-                    food: newFood,
+                this.setState((state, props) => {
+
+                    // Get old food array
+                    const newFood = state.food;
+
+                    // Add new food to it
+                    newFood.push(food);
+
+                    // Update food array
+                    return {
+                        food: newFood,
+                    };
                 });
 
                 // Exit
@@ -151,54 +186,52 @@ class App extends React.Component {
         }
     }
 
-    updateSpeed = (factor) => {
+    updateSpeed = (factor = 0.9) => {
 
         // Define new speed using factpr
-        const newSpeed = Math.max(50, Math.floor(this.state.speed * factor));
-
-        // Update game state
-        this.setState({
-            speed: newSpeed,
-        });
+        this.setState((state, props) => ({
+            speed: Math.max(this.minSpeed, Math.floor(state.speed * factor)),
+        }));
 
         // Restart timer
         this.restartTimer();
     }
 
-    updateScore = () => {
+    updateScore = (increment = 1) => {
 
         // Increment current score
-        const newScore = this.state.score + 1;
-
-        // Store it
-        this.setState({
-            score: newScore,
-        });
+        this.setState((state, props) => ({
+            score: state.score + increment,
+        }));
     }
 
     addScore = (name, score) => {
 
-        // Add new score
-        let newScores = [...this.state.scores, [name, score]];
-
-        // Keep 5 best
-        if (newScores.length > this.nScores) {
-
-            // Get score values
-            const scores = newScores.map((entry) => {
-                return entry[1];
-            });
-
-            // Get worst score
-            const worstScore = Math.min(...scores);
-
-            // Remove it
-            newScores.splice(scores.indexOf(worstScore), 1);
-        }
-
         // Update score board
-        this.setState({
-            scores: newScores,
+        this.setState((state, props) => {
+
+            // Define new entry
+            const newEntry = [name, score];
+
+            // Define new scores
+            let newScores = [...state.scores, newEntry];
+
+            // Keep best
+            if (newScores.length > this.nScores) {
+
+                // Get score values
+                const scores = newScores.map((entry) => {
+                    return entry[1];
+                });
+
+                // Remove it
+                newScores.splice(scores.indexOf(Math.min(...scores)), 1);
+            }
+
+            // Redefine scores
+            return {
+                scores: newScores,
+            };
         });
     }
 
@@ -235,7 +268,7 @@ class App extends React.Component {
                     score={this.state.score}
                     scores={this.state.scores}
                     addScore={this.addScore}
-                    startGame={this.startGame}
+                    restartGame={this.restartGame}
                 />
             </div>
         );
