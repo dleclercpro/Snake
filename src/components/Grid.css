@@ -1,0 +1,12 @@
+.grid {
+    /*
+    width: 90%;
+    height: 90%;
+    */
+    border: 1px solid #dddddd;
+    margin-bottom: 30px;
+}
+
+.lost .grid {
+    opacity: 0.25;
+}
